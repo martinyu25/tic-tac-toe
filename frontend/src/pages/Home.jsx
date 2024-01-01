@@ -35,14 +35,13 @@ const Home = () => {
 			e.preventDefault();
 			alert('Please enter a nickname');
 		  } else {
-			// Continue with the game entering logic
 			
 			fetch("http://localhost:8000/game", {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify({nickname: nickname})
+				body: JSON.stringify({"nickname":nickname, "loadGame":true,})
 			})
 			.then(response => response.json())
 			.then(data => {

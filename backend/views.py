@@ -6,7 +6,6 @@ from flask import Blueprint, jsonify, request
 
 views = Blueprint(__name__, 'views')
 
-nickname = ""  # Global variable to store the nickname
 
 
 
@@ -28,16 +27,17 @@ def saveGame(filename, data):
         print(f"Couldn't save the data. Exiting now. Error: {e}")
         sys.exit()
 
-# def loadGame(filename):
-#     """
-#     Зарежда запаметена игра от файл.
-#     """
-#     try:
-#         with open(filename + ".txt", "rb") as file:
-#             return json.load(file)
-#     except FileNotFoundError:
-#         print("File with that name hasn't been found!")
-#         sys.exit()
+def loadGame(filename):
+    """
+    Зарежда запаметена игра от файл.
+    """
+    print(filename)
+    try:
+        with open(filename + ".txt", "rb") as file:
+            return json.load(file)
+    except FileNotFoundError:
+        print(f"File with that name {filename} hasn't been found!")
+        sys.exit()
 
 # def printBoard(board):
 #     """
@@ -109,27 +109,44 @@ def checkFull(board):
 
 
 
-
+nickname = "default"  # Global variable to store the nickname
+board = newBoard()  # Create a new game board
+turns = newBoard()
+turn = -1
 
 @views.route("/game", methods=["GET", "POST"])
 def game():
     global nickname
+    global board
+    global turns
+    global turn
+
     if request.method == "POST":
         # Handle the POST request here
         data = request.get_json()
         nickname = data.get("nickname", "")
-        board = newBoard()  # Create a new game board
-        saveGame(nickname, data)  # Save the game
-        return jsonify({
-            "nickname": nickname,
-            "board": board,
-        }), 200
+
+        if len(data) > 2:  # Only save the game if data contains more than just the nickname
+            saveGame(nickname, data)  # Save the game
+        
+        if 'loadGame' in data and 'nickname' in data:
+            data = loadGame(nickname)
+            board =  data['board']
+            turns = data['turns']
+            turn = data['turn']
+            nickname = data['nickname']
+
+        # return jsonify({
+        #     "board": board,
+        #     "nickname": nickname,
+        # }), 200
+        
 
     else:
-        # data = loadGame(nickname)
+
         return jsonify({
-            "board": [[0]*3 for _ in range(3)],
-            "turns": [[0]*3 for _ in range(3)],
-            "turn": -1,
+            "board": board,
+            "turns": turns,
+            "turn": turn,
             "nickname": nickname,
         }), 200

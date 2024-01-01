@@ -20,7 +20,19 @@ const Game = () => {
 					setNickname(data.nickname)
 				})
 				.catch(error => console.error('Error:', error));
-		}, [nickname]);
+		}, []);
+
+		// useEffect(() => {
+		// 	fetch("http://localhost:8000/game", {
+		// 		method: 'POST',
+		// 		headers: {
+		// 			'Content-Type': 'application/json'
+		// 		},
+		// 		body: JSON.stringify({"turn":turn})
+		// 	})
+		// 	.then(response => response.json())
+		// 	.catch(error => console.error('Error:', error));
+		// }, [turn]);
 
 	const handleSaveGame = () => {
 		fetch("http://localhost:8000/game", {
