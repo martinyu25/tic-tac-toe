@@ -1,4 +1,4 @@
-
+import {Link} from 'react-router-dom'
 import { useState, useEffect} from 'react'
 import logoX from "../assets/close.png"
 import logoO from '../assets/circle.png'
@@ -9,17 +9,31 @@ const Game = () => {
 	const [turns, setTurns] = useState(Array(3).fill().map(() => Array(3).fill(null)));
     const [turn, setTurn] = useState(0)
     const [nickname, setNickname] = useState("")
-	useEffect(() => {
-		fetch("http://localhost:8000/game")
-			.then(response => response.json())
-			.then(data => {
-				setGameBoard(data.board)
-				setTurns(data.turns)
-				setTurn(data.turn)
-				setNickname(data.nickname)
-			})
-			.catch(error => console.error('Error:', error));
-	}, [nickname]);
+	
+		useEffect(() => {
+			fetch("http://localhost:8000/game")
+				.then(response => response.json())
+				.then(data => {
+					setGameBoard(data.board)
+					setTurns(data.turns)
+					setTurn(data.turn)
+					setNickname(data.nickname)
+				})
+				.catch(error => console.error('Error:', error));
+		}, [nickname]);
+
+	const handleSaveGame = () => {
+		fetch("http://localhost:8000/game", {
+		  method: 'POST',
+		  headers: {
+			'Content-Type': 'application/json'
+		  },
+		  body: JSON.stringify({nickname: nickname, board: gameBoard, turns: turns, turn: turn})
+		})
+		.catch(error => console.error('Error:', error));
+	  };
+
+
 
     return (
 			<main className="h-full w-full">
@@ -90,6 +104,7 @@ const Game = () => {
 							<h2 className="font-mono">{nickname}</h2>
 							<h2 className="font-mono">0</h2>
 						</div>
+						<Link to="/" className='p-5 rounded-md' onClick={handleSaveGame} >Save and exit</Link>
 						<div className="flex flex-col">
 							<h2 className="font-mono">Computer</h2>
 							<h2 className="font-mono">0</h2>
