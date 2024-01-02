@@ -7,25 +7,32 @@ const Game = () => {
 	const [board, setBoard] = useState(Array(3).fill().map(() => Array(3).fill(0)));
 	const [turnsPlayer, setTurnsPlayer] = useState(Array(3).fill().map(() => Array(3).fill(0)));
 	const [turnsComp, setTurnsComp] = useState(Array(3).fill().map(() => Array(3).fill(0)));
-    const [turn, setTurn] = useState(0)
+    const [turn, setTurn] = useState(-1)
     const [nickname, setNickname] = useState("")
 	const [compCounter, setCompCounter] = useState(0)
     const [playerCounter, setPlayerCounter] = useState(0)
+    const [drawCounter, setDrawCounter] = useState(0)
+	
+	
+	const handleNewGame = (playerCounter, compCounter, drawCounter) => {
+		
+		// Continue with the game entering logic
+			const newBoard = [[0,0,0],[0,0,0],[0,0,0]];
+			const newTurnsPlayer = [[0,0,0],[0,0,0],[0,0,0]];
+			const newTurnsComp = [[0,0,0],[0,0,0],[0,0,0]];
+			const newTurn = -1;
 
-
-	const handleNewGame = async () => {
+			setBoard(newBoard);
+			setTurnsPlayer(newTurnsPlayer);
+			setTurnsComp(newTurnsComp);
+			setTurn(newTurn);
 			
-			// Continue with the game entering logic
-			setTurnsPlayer(Array(3).fill().map(() => Array(3).fill(0)))
-			setTurnsComp(Array(3).fill().map(() => Array(3).fill(0)))
-			setBoard(Array(3).fill().map(() => Array(3).fill(0)))
-			setTurn(-1)
 			fetch("http://localhost:8000/game", {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify({newGame:true, turnsComp: turnsComp, turnsPlayer: turnsPlayer, turn: turn, board: board})
+				body: JSON.stringify({newGame:true, turnsComp: newTurnsComp, turnsPlayer: newTurnsPlayer, turn: newTurn, board: newBoard, playerCounter: playerCounter, compCounter: compCounter, drawCounter: drawCounter})
 			})
 			.then(response => response.json())
 			.then(data => {
@@ -48,36 +55,92 @@ const Game = () => {
 					setNickname(data.nickname)
 					setCompCounter(data.compCounter)
 					setPlayerCounter(data.playerCounter)
+					setDrawCounter(data.drawCounter)
+					
 				})
 				.catch(error => console.error('Error:', error));
 		}, [nickname]);
 
-		const checkWinnerH =  () => {
+		const checkWinner =  () => {
+			console.table(turnsPlayer)
+			console.table(board)
+			console.table(turnsComp)
+			return fetch("http://localhost:8000/game", {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({check:true, turn:turn, turnsPlayer:turnsPlayer, turnsComp:turnsComp, board:board, playerCounter:playerCounter, compCounter:compCounter, drawCounter:drawCounter})
+			})
+			.then(response => response.json())
+			.then(async (data) => {
+				
+				if(data.player)
+				{
+					setPlayerCounter(playerCounter + 1)
+					handleNewGame(playerCounter + 1, compCounter, drawCounter)
+					console.log("player win")
+					return 1
+				}
+				else if(data.computer)
+				{
+					setCompCounter(compCounter + 1)
+					handleNewGame(playerCounter, compCounter + 1, drawCounter)
+					console.log("computer win")
+					return 2
+
+					
+				}
+				else if(data.full)
+				{
+					setDrawCounter(drawCounter + 1)
+					handleNewGame(playerCounter, compCounter, drawCounter + 1)
+					console.log("draw")
+					return 1
+					
+				}
+				else{
+					return 0
+				}
+			})
+		}
+
+		useEffect(() => {
+			const fetchWinner = async () => {
+				const winner = await checkWinner();
+				console.log("checkwinner" + winner)
+			};
+			fetchWinner();
+		}, [turnsComp]); 
+
+		const computerMove = async () => {
 			fetch("http://localhost:8000/game", {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify({checkH:true, turn:turn, turnsPlayer:turnsPlayer, turnsComp:turnsComp})
+				body: JSON.stringify({computerMove:true, turn:-1, turnsPlayer:turnsPlayer, turnsComp:turnsComp, board:board})
 			})
 			.then(response => response.json())
 			.then(async (data) => {
-				console.log(data.player)
-				console.log(data.computer)
-				if(data.player)
-				{
-					await new Promise((resolve) => setTimeout(resolve, 1000));
-					setPlayerCounter(playerCounter + 1)
-					handleNewGame()
-				}
-				else if(data.computer)
-				{
-					await new Promise((resolve) => setTimeout(resolve, 1000));
-					setCompCounter(compCounter + 1)
-					handleNewGame()
-				}
+					const winner = await checkWinner();
+					console.log("checkwinner" + winner)
+					if(winner == 0)
+					{
+
+						console.log("computer move")
+						setBoard(data.computerMove[0])
+						setTurnsPlayer(data.computerMove[1])
+						setTurnsComp(data.computerMove[2])
+						setTurn(data.turn) 
+					}
+
 			})
+			.catch(error => console.error('Error:', error));
 		}
+
+
+		
 
 	const handleSaveGame = () => {
 		fetch("http://localhost:8000/game", {
@@ -85,7 +148,7 @@ const Game = () => {
 		  headers: {
 			'Content-Type': 'application/json'
 		  },
-		  body: JSON.stringify({saveGame: true, nickname: nickname, turnsComp: turnsComp, turnsPlayer: turnsPlayer, turn: turn, board: board, compCounter: compCounter, playerCounter: playerCounter})
+		  body: JSON.stringify({drawCounter:drawCounter, saveGame: true, nickname: nickname, turnsComp: turnsComp, turnsPlayer: turnsPlayer, turn: turn, board: board, compCounter: compCounter, playerCounter: playerCounter})
 		})
 		.catch(error => console.error('Error:', error));
 	  };
@@ -93,7 +156,7 @@ const Game = () => {
 
 
     return (
-			<main className="h-full w-full">
+			<main className="h-full w-full relative">
 				<div className="inline-flex ">
 					<img
 						src={logoX}
@@ -114,7 +177,7 @@ const Game = () => {
 								return (
 									<button
 										key={`${rowIndex}-${colIndex}`}
-										onClick={() => {
+										onClick={async () => {
 
 											
 											const newArray = [...board];
@@ -122,7 +185,7 @@ const Game = () => {
 											const newArrayTurnsComp = [...turnsComp];
 											
 											turn == -1 ? setTurn(2) : setTurn(-1);
-											
+											console.log("turn" + turn)
 											if(turn == -1)
 											{
 												newArray[rowIndex][colIndex] = turn;
@@ -130,26 +193,17 @@ const Game = () => {
 												newArrayTurnsPlayer[rowIndex][colIndex] = turn;
 												setTurnsPlayer(newArrayTurnsPlayer);
 											}
-											else
-											{
-												newArray[rowIndex][colIndex] = turn;
-												setBoard(newArray);
-												newArrayTurnsComp[rowIndex][colIndex] = turn;
-												setTurnsComp(newArrayTurnsComp);
-											}
 											
-											checkWinnerH()
-											console.table(board);
-											console.table(turnsPlayer);
-											console.table(turnsComp);
+											computerMove()
 										}}
 										className={`${
 											colIndex == 0 || colIndex == 1 ? `border-r-4` : ``
 										}
 										${
+											
 											rowIndex == 1 ? `border-t-4 border-b-4` : ``
 										} bg-transparent w-28 h-28 grid place-items-center`}
-										disabled={item}
+										disabled={turn == 2 ? true : false || item != 0 ? true : false}
 									>
 										{board[rowIndex][colIndex] ? (
 											board[rowIndex][colIndex] == -1 ? (
@@ -172,16 +226,20 @@ const Game = () => {
 						})}
 					</div>
 
-					<div className="flex flex-row justify-between mt-10">
+					<div className="relative flex flex-row justify-between mt-10 translate-x-1 place-items-center">
 						<div className="flex flex-col">
 							<h2 className="font-mono">{nickname}</h2>
 							<h2 className="font-mono">{playerCounter}</h2>
 						</div>
-						<Link to="/" className='p-5 rounded-md' onClick={handleSaveGame} >Save and exit</Link>
+						<div className="flex flex-col">
+							<h2 className="font-mono">Draw</h2>
+							<h2 className="font-mono">{drawCounter}</h2>
+						</div>
 						<div className="flex flex-col">
 							<h2 className="font-mono">Computer</h2>
 							<h2 className="font-mono">{compCounter}</h2>
 						</div>
+						<Link to="/" className='p-5 absolute top-[150%] left-[28%] rounded-md bg-transparent/15 ' onClick={handleSaveGame} >Save and exit</Link>
 					</div>
 				</div>
 			</main>

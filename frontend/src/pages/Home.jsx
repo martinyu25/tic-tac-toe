@@ -11,6 +11,7 @@ const Home = () => {
     const [turn, setTurn] = useState(-1)
     const [compCounter, setCompCounter] = useState(0)
     const [playerCounter, setPlayerCounter] = useState(0)
+    const [drawCounter, setDrawCounter] = useState(0)
 	const handleEnterGame = (e) => {
 
 		if (!nickname) {
@@ -31,7 +32,7 @@ const Home = () => {
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify({enterGame:true, nickname: nickname, turnsComp: turnsComp, turnsPlayer: turnsPlayer, turn: turn, board: board, compCounter: compCounter, playerCounter: playerCounter})
+				body: JSON.stringify({enterGame:true, nickname: nickname, turnsComp: turnsComp, turnsPlayer: turnsPlayer, turn: turn, board: board})
 			})
 			.then(response => response.json())
 			.then(data => {

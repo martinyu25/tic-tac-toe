@@ -91,15 +91,17 @@ def checkWinner(turn, board):
     """
     return checkWinnerH(turn, board) or checkWinnerV(turn, board) or checkWinnerD(turn, board)
 
-def computerMove(board):
-    """
-    Ход на компютърния играч.
-    """
-    print("Computer is thinking...")
-    while True:
-        row, col = random.randint(0, 2), random.randint(0, 2)
-        if validMove(row, col, board):
-            return row, col
+def find_empty_spaces(board):
+    empty_spaces = [(i, j) for i in range(3) for j in range(3) if board[i][j] == 0]
+    return empty_spaces
+
+def computerMove(board, turnsPlayer, turnsComp):
+    empty_spaces = find_empty_spaces(board)
+    if empty_spaces:
+        i, j = random.choice(empty_spaces)
+        board[i][j] = 2  # Assuming the bot is player 2
+        turnsComp[i][j] = 2  # Mark the move in turnsComp
+    return board, turnsPlayer, turnsComp
 
 def checkFull(board):
     """
@@ -110,13 +112,14 @@ def checkFull(board):
 
 
 
-nickname = "default"  # Global variable to store the nickname
+nickname = "Martin"  # Global variable to store the nickname
 turnsComp = newBoard()  # Create a new game board
 turnsPlayer = newBoard()
 board = newBoard()
 turn = -1
 playerCounter = 0
 compCounter = 0
+drawCounter = 0
 
 @views.route("/game", methods=["GET", "POST"])
 def game():
@@ -127,17 +130,20 @@ def game():
     global turn
     global playerCounter
     global compCounter
+    global drawCounter
 
     if request.method == "POST":
         # Handle the POST request here
         data = request.get_json()
-        nickname = data.get("nickname", "")
 
         if 'newGame' in data:
             turnsComp =  data['turnsComp']
             turnsPlayer = data['turnsPlayer']
             board = data['board']
             turn = data['turn']
+            playerCounter = data['playerCounter']
+            compCounter = data['compCounter']
+            drawCounter = data['drawCounter']
 
         if 'enterGame' in data:
             turnsComp =  data['turnsComp']
@@ -147,6 +153,7 @@ def game():
             nickname = data['nickname']
             playerCounter = data['playerCounter']
             compCounter = data['compCounter']
+            drawCounter = data['drawCounter']
 
 
 
@@ -162,14 +169,31 @@ def game():
             nickname = data['nickname']
             playerCounter = data['playerCounter']
             compCounter = data['compCounter']
+            drawCounter = data['drawCounter']
 
-        if 'checkH' in data:
+        if 'check' in data:
             turn = data['turn']
             turnsPlayer = data['turnsPlayer']
             turnsComp = data['turnsComp']
+            board = data['board']
+            playerCounter = data['playerCounter']
+            compCounter = data['compCounter']
+            drawCounter = data['drawCounter']
             return jsonify({
-                "player" : checkWinnerH(-1, turnsPlayer),
-                "computer" : checkWinnerH(2, turnsComp),
+                "player" : checkWinner(-1, turnsPlayer),
+                "computer" : checkWinner(2, turnsComp),
+                "full": checkFull(board),
+            }), 200
+        
+        if 'computerMove' in data:
+            turn = data['turn']
+            turnsPlayer = data['turnsPlayer']
+            turnsComp = data['turnsComp']
+            board = data['board']
+            
+            return jsonify({
+                "computerMove": computerMove(board, turnsPlayer, turnsComp),
+                "turn": turn,
             }), 200
         
         return jsonify({
@@ -187,4 +211,5 @@ def game():
             "nickname": nickname,
             "playerCounter": playerCounter,
             "compCounter": compCounter,
+            "drawCounter": drawCounter,
         }), 200
