@@ -6,7 +6,7 @@ from flask import Blueprint, jsonify, request
 
 views = Blueprint(__name__, 'views')
 
-
+alert = ""
 
 
 def newBoard():
@@ -36,7 +36,8 @@ def loadGame(filename):
         with open(filename + ".txt", "rb") as file:
             return json.load(file)
     except FileNotFoundError:
-        print(f"File with that name {filename} hasn't been found!")
+        alert = "File with that name hasn't been found!"
+        print(alert)
         sys.exit()
 
 # def printBoard(board):
@@ -110,43 +111,80 @@ def checkFull(board):
 
 
 nickname = "default"  # Global variable to store the nickname
-board = newBoard()  # Create a new game board
-turns = newBoard()
+turnsComp = newBoard()  # Create a new game board
+turnsPlayer = newBoard()
+board = newBoard()
 turn = -1
+playerCounter = 0
+compCounter = 0
 
 @views.route("/game", methods=["GET", "POST"])
 def game():
     global nickname
+    global turnsComp
+    global turnsPlayer
     global board
-    global turns
     global turn
+    global playerCounter
+    global compCounter
 
     if request.method == "POST":
         # Handle the POST request here
         data = request.get_json()
         nickname = data.get("nickname", "")
 
-        if len(data) > 2:  # Only save the game if data contains more than just the nickname
+        if 'newGame' in data:
+            turnsComp =  data['turnsComp']
+            turnsPlayer = data['turnsPlayer']
+            board = data['board']
+            turn = data['turn']
+
+        if 'enterGame' in data:
+            turnsComp =  data['turnsComp']
+            turnsPlayer = data['turnsPlayer']
+            board = data['board']
+            turn = data['turn']
+            nickname = data['nickname']
+            playerCounter = data['playerCounter']
+            compCounter = data['compCounter']
+
+
+
+        if 'saveGame' in data: 
             saveGame(nickname, data)  # Save the game
         
         if 'loadGame' in data and 'nickname' in data:
             data = loadGame(nickname)
-            board =  data['board']
-            turns = data['turns']
+            turnsComp =  data['turnsComp']
+            turnsPlayer = data['turnsPlayer']
+            board = data['board']
             turn = data['turn']
             nickname = data['nickname']
+            playerCounter = data['playerCounter']
+            compCounter = data['compCounter']
 
-        # return jsonify({
-        #     "board": board,
-        #     "nickname": nickname,
-        # }), 200
+        if 'checkH' in data:
+            turn = data['turn']
+            turnsPlayer = data['turnsPlayer']
+            turnsComp = data['turnsComp']
+            return jsonify({
+                "player" : checkWinnerH(-1, turnsPlayer),
+                "computer" : checkWinnerH(2, turnsComp),
+            }), 200
+        
+        return jsonify({
+            "alert": alert,
+        }), 200
         
 
     else:
 
         return jsonify({
+            "turnsComp": turnsComp,
+            "turnsPlayer": turnsPlayer,
             "board": board,
-            "turns": turns,
             "turn": turn,
             "nickname": nickname,
+            "playerCounter": playerCounter,
+            "compCounter": compCounter,
         }), 200

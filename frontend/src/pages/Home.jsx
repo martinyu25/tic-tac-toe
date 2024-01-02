@@ -5,13 +5,25 @@ import { useState, useEffect} from 'react'
 
 const Home = () => {
 	const [nickname, setNickname] = useState("")
-
+	const [turnsComp, setTurnsComp] = useState(Array(3).fill().map(() => Array(3).fill(0)));
+	const [turnsPlayer, setTurnsPlayer] = useState(Array(3).fill().map(() => Array(3).fill(0)));
+	const [board, setBoard] = useState(Array(3).fill().map(() => Array(3).fill(0)));
+    const [turn, setTurn] = useState(-1)
+    const [compCounter, setCompCounter] = useState(0)
+    const [playerCounter, setPlayerCounter] = useState(0)
 	const handleEnterGame = (e) => {
 
 		if (!nickname) {
 			e.preventDefault();
 			alert('Please enter a nickname');
-		  } else {
+		}
+		else if(nickname.length > 10)
+		{
+			e.preventDefault();
+			alert('Please enter a shorter nickname');
+		} 
+		else 
+		{
 			// Continue with the game entering logic
 			
 			fetch("http://localhost:8000/game", {
@@ -19,11 +31,12 @@ const Home = () => {
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify({nickname: nickname})
+				body: JSON.stringify({enterGame:true, nickname: nickname, turnsComp: turnsComp, turnsPlayer: turnsPlayer, turn: turn, board: board, compCounter: compCounter, playerCounter: playerCounter})
 			})
 			.then(response => response.json())
 			.then(data => {
 				setNickname(data.nickname)
+				
 			})
 			.catch(error => console.error('Error:', error));
 		};
@@ -46,6 +59,7 @@ const Home = () => {
 			.then(response => response.json())
 			.then(data => {
 				setNickname(data.nickname)
+				console.log(data.alert)
 			})
 			.catch(error => console.error('Error:', error));
 		};
@@ -71,7 +85,7 @@ const Home = () => {
 					<Link
 						to="/game"
 						onClick={handleEnterGame}
-						className=" after:animate-pulse after:rounded-full relative after:content-[''] after:w-5 after:h-5 after:bg-white after:absolute after:top-[-10%] after:right-[-5%]  font-mono transition-all duration-150 grid w-32 h-14 mt-10 text-left text-white rounded-lg place-content-center text-bold hover:bg-transparent/90 bg-transparent/25"
+						className=" after:animate-pulse after:rounded-full relative after:content-[''] after:w-5 after:h-5 after:bg-red-600 after:absolute after:top-[-10%] after:right-[-5%]  font-mono transition-all duration-150 grid w-32 h-14 mt-10 text-left text-white rounded-lg place-content-center text-bold hover:bg-transparent/90 bg-transparent/25"
 					>
 						New game
 					</Link>
