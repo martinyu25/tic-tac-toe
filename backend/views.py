@@ -1,25 +1,22 @@
 import random
 import sys
 import json
-import pickle
 from flask import Blueprint, jsonify, request
 
 views = Blueprint(__name__, 'views')
 
-alert = ""
-
 
 def newBoard():
-    """
-    Генерира нова дъска (празен двумерен лист от нули).
-    """
+    
+    #Генерира нова дъска (празен двумерен лист от нули).
+    
     return [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
 
 
 def saveGame(filename, data):
-    """
-    Saves the provided data into a file.
-    """
+    
+    #Saves the provided data into a file.
+    
     try:
         with open(filename + ".txt", "w") as file:
             json.dump(data, file)
@@ -28,9 +25,9 @@ def saveGame(filename, data):
         sys.exit()
 
 def loadGame(filename):
-    """
-    Зарежда запаметена игра от файл.
-    """
+    
+    #Зарежда запаметена игра от файл.
+    
     print(filename)
     try:
         with open(filename + ".txt", "rb") as file:
@@ -49,9 +46,9 @@ def loadGame(filename):
 #     print()
 
 def validMove(row, column, board):
-    """
-    Проверява валидността на позиция.
-    """
+    
+    #Проверява валидността на позиция.
+    
     return 0 <= row < 3 and 0 <= column < 3 and board[row][column] == 0
 
 # def makeMove(row, column, board):
@@ -62,33 +59,33 @@ def validMove(row, column, board):
 #     return board
 
 def checkWinnerV(turn, board):
-    """
-    Проверява дали играчът има три последователни марки вертикално.
-    """
+    
+    #Проверява дали играчът има три последователни марки вертикално.
+    
     for col in range(3):
         if all(board[row][col] == turn for row in range(3)):
             return True
     return False
 
 def checkWinnerH(turn, board):
-    """
-    Проверява дали играчът има три последователни марки хоризонтално.
-    """
+    
+    #Проверява дали играчът има три последователни марки хоризонтално.
+    
     for row in range(3):
         if all(board[row][col] == turn for col in range(3)):
             return True
     return False
 
 def checkWinnerD(turn, board):
-    """
-    Проверява дали играчът има три последователни марки диагонално.
-    """
+    
+    #Проверява дали играчът има три последователни марки диагонално.
+    
     return all(board[i][i] == turn for i in range(3)) or all(board[i][2 - i] == turn for i in range(3))
 
 def checkWinner(turn, board):
-    """
-    Проверява дали играчът има три последователни марки по който и да е начин.
-    """
+    
+    #Проверява дали играчът има три последователни марки по който и да е начин.
+    
     return checkWinnerH(turn, board) or checkWinnerV(turn, board) or checkWinnerD(turn, board)
 
 def find_empty_spaces(board):
@@ -104,9 +101,9 @@ def computerMove(board, turnsPlayer, turnsComp):
     return board, turnsPlayer, turnsComp
 
 def checkFull(board):
-    """
-    Проверява дали дъската е запълнена.
-    """
+    
+    #Проверява дали дъската е запълнена.
+    
     return all(cell != 0 for row in board for cell in row)
 
 
@@ -173,16 +170,10 @@ def game():
 
         if 'check' in data:
             turn = data['turn']
-            turnsPlayer = data['turnsPlayer']
-            turnsComp = data['turnsComp']
-            board = data['board']
-            playerCounter = data['playerCounter']
-            compCounter = data['compCounter']
-            drawCounter = data['drawCounter']
             return jsonify({
-                "player" : checkWinner(-1, turnsPlayer),
-                "computer" : checkWinner(2, turnsComp),
-                "full": checkFull(board),
+                "player" : checkWinner(-1, data['turnsPlayer']),
+                "computer" : checkWinner(2, data['turnsComp']),
+                "full": checkFull(data['board']),
             }), 200
         
         if 'computerMove' in data:
@@ -195,12 +186,9 @@ def game():
                 "computerMove": computerMove(board, turnsPlayer, turnsComp),
                 "turn": turn,
             }), 200
-        
-        return jsonify({
-            "alert": alert,
-        }), 200
-        
 
+        return jsonify
+        
     else:
 
         return jsonify({

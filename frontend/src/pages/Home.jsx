@@ -32,7 +32,7 @@ const Home = () => {
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify({enterGame:true, nickname: nickname, turnsComp: turnsComp, turnsPlayer: turnsPlayer, turn: turn, board: board})
+				body: JSON.stringify({enterGame:true, nickname: nickname, turnsComp: turnsComp, turnsPlayer: turnsPlayer, turn: turn, board: board, compCounter: compCounter, playerCounter:playerCounter, drawCounter})
 			})
 			.then(response => response.json())
 			.then(data => {
@@ -60,7 +60,6 @@ const Home = () => {
 			.then(response => response.json())
 			.then(data => {
 				setNickname(data.nickname)
-				console.log(data.alert)
 			})
 			.catch(error => console.error('Error:', error));
 		};
